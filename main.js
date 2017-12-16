@@ -1,61 +1,63 @@
-import {square} from './models.js';
-import {doubleSquare} from './models.js';
-import {drawPolygon} from './draw.js';
-
-function toPoint(values) {
-    return {
-        x: values[0],
-        y: values[1],
-        z: values[2]
-    };
-}
-
-function toPolygon(shape) {
-    return shape.map(toPoint);
-}
-
-function toMesh(shape) {
-    return shape.map(toPolygon);
-}
+import {cube, pyramid, square} from './models.js';
+//import {doubleSquare} from './models.js';
+import {Camera} from './camera.js';
+import {toMesh} from './mesh.js';
+import {createRenderer} from './render.js';
 
 const canvas = document.querySelector('canvas');
-const context = canvas.getContext('2d');
 
-const mesh = toMesh(doubleSquare);
+const render = createRenderer(canvas);
 
-function perspective(point, distance) {
-    const fov = point.z + distance;
-    point.x /= fov;
-    point.y /= fov;
-}
+const scene = [
+    toMesh(cube),
+    toMesh(pyramid),
+    toMesh(square)
+];
 
-function zoom(point, factor) {
-    const scale = Math.pow(factor, 2);
-    point.x *= scale;
-    point.y *= scale;
-}
+scene[0].color = 'red';
+scene[1].color = 'blue';
+scene[2].color = 'yellow';
 
-class Camera {
-    constructor() {
-        this.pos = {z: 100};
-        this.zoom = 8;
-    }
-
-    transform(point) {
-        perspective(point, this.pos.z);
-        zoom(point, this.zoom);
-    }
-}
+const mesh = toMesh(cube);
 
 const camera = new Camera();
+camera.pos.z = 200;
+camera.zoom = 12;
 
-context.strokeStyle = '#fff';
-mesh.forEach(polygon => {
-    polygon.forEach(point => {
-        camera.transform(point);
-    });
+function animate(time) {
+    camera.pos.z += 0.1;
 
-    drawPolygon(polygon, context);
-});
+    {
+        const mesh = scene[0];
+        mesh.rotation.x += 0.1;
+        mesh.rotation.y += 0.01;
+        mesh.rotation.z += 0.1;
 
+        mesh.position.x = Math.sin(time / 300) * 50;
+        mesh.position.y = Math.cos(time / 500) * 80;
+    }
+
+    {
+        const mesh = scene[1];
+        mesh.rotation.x -= 0.1;
+        mesh.rotation.y += 0.03;
+
+        mesh.position.x = Math.cos(time / 800) * 80;
+    }
+
+
+    {
+        const mesh = scene[2];
+        mesh.rotation.x -= 0.01;
+        mesh.rotation.y += 0.0001;
+
+        mesh.position.x = Math.sin(time / 300) * 80;
+    }
+
+    render(scene, camera);
+    requestAnimationFrame(animate);
+}
+
+animate(0);
+//drawMesh(mesh);
 console.log(mesh);

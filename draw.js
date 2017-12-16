@@ -1,4 +1,4 @@
-export function drawPolygon(polygon, context) {
+function drawPolygon(polygon, context) {
     polygon.forEach(point => {
         offsetToCenter(point, context.canvas);
     });
@@ -17,4 +17,19 @@ export function drawPolygon(polygon, context) {
 function offsetToCenter(point, canvas) {
     point.x += canvas.width / 2;
     point.y += canvas.height / 2;
+}
+
+export function drawMesh(mesh, camera, context) {
+    context.strokeStyle = mesh.color;
+
+    mesh.polygons.forEach(polygon => {
+        const projectedPolygon = polygon.map(point => ({...point}));
+
+        projectedPolygon.forEach(point => {
+            mesh.transform(point);
+            camera.transform(point);
+        });
+
+        drawPolygon(projectedPolygon, context);
+    });
 }
